@@ -1,0 +1,6 @@
+method,parameter,PSNR,SSIM,runtime_seconds,notes
+noisy_image,-,20.421019331827708,0.2963928471978835,0.0,degraded observation
+gaussian_filter,filter_sigma=1.0,27.171125855326714,0.6387131707414204,0.004875300044659525,simple smoothing baseline
+tikhonov_lambda_1.0,lambda=1.0,26.801758742885763,0.622012538477356,0.018835200055036694,best Tikhonov PSNR setting from lambda sensitivity
+tikhonov_lambda_5.0,lambda=5.0,24.668892718876304,0.6899463443341773,0.01692899997578934,best Tikhonov SSIM setting from lambda sensitivity
+tv_chambolle_weight_0.1,weight=0.1,28.302924553003027,0.7564625467424131,0.2669868999510072,best TV setting by both PSNR and SSIM
