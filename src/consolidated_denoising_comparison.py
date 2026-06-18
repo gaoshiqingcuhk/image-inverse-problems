@@ -269,33 +269,33 @@ def main() -> None:
 
     metrics, images = run_comparison(clean, noisy)
 
-    results_path = RESULTS_DIR / "consolidated_denoising_comparison.csv"
+    results_path = RESULTS_DIR / "07_consolidated_denoising_comparison.csv"
     metrics.to_csv(results_path, index=False)
 
     save_bar_chart(
         metrics,
         metric_name="PSNR",
         ylabel="PSNR",
-        path=FIGURES_DIR / "consolidated_psnr_comparison.png",
+        path=FIGURES_DIR / "07_consolidated_psnr_comparison.png",
     )
     save_bar_chart(
         metrics,
         metric_name="SSIM",
         ylabel="SSIM",
-        path=FIGURES_DIR / "consolidated_ssim_comparison.png",
+        path=FIGURES_DIR / "07_consolidated_ssim_comparison.png",
     )
     save_bar_chart(
         metrics,
         metric_name="runtime_seconds",
         ylabel="Runtime seconds",
-        path=FIGURES_DIR / "consolidated_runtime_comparison.png",
+        path=FIGURES_DIR / "07_consolidated_runtime_comparison.png",
         use_log_scale=True,
     )
     save_visual_comparison(
         clean,
         images,
         metrics,
-        path=FIGURES_DIR / "consolidated_visual_comparison.png",
+        path=FIGURES_DIR / "07_consolidated_visual_comparison.png",
     )
 
     print("Consolidated denoising comparison completed successfully.")

@@ -118,7 +118,7 @@ def main() -> None:
     )
 
     # 5. Save metrics, images, and figures.
-    metrics_path = RESULTS_DIR / "mvp_denoising_metrics.csv"
+    metrics_path = RESULTS_DIR / "01_mvp_denoising_metrics.csv"
     metrics.to_csv(metrics_path, index=False)
 
     save_grayscale_png(clean, DATA_DIR / "camera_clean.png")
@@ -129,9 +129,9 @@ def main() -> None:
         clean,
         noisy,
         denoised,
-        FIGURES_DIR / "mvp_denoising_comparison.png",
+        FIGURES_DIR / "01_mvp_denoising_comparison.png",
     )
-    save_error_map(clean, denoised, FIGURES_DIR / "mvp_error_map.png")
+    save_error_map(clean, denoised, FIGURES_DIR / "01_mvp_error_map.png")
 
     print("MVP denoising experiment completed successfully.")
     print(f"Metrics saved to: {metrics_path}")

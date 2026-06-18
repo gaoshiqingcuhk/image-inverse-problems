@@ -283,7 +283,7 @@ def main() -> None:
 
     metrics, images = run_experiment(clean, H)
 
-    results_path = RESULTS_DIR / "tikhonov_deblurring_results.csv"
+    results_path = RESULTS_DIR / "08_tikhonov_deblurring_results.csv"
     metrics.to_csv(results_path, index=False)
 
     save_grayscale_png(clean, DATA_DIR / "deblur_clean.png")
@@ -293,10 +293,10 @@ def main() -> None:
         DATA_DIR / "deblur_blurred_noisy_sigma_0.01.png",
     )
 
-    save_metric_curve(metrics, "PSNR", "PSNR", FIGURES_DIR / "tikhonov_deblurring_psnr.png")
-    save_metric_curve(metrics, "SSIM", "SSIM", FIGURES_DIR / "tikhonov_deblurring_ssim.png")
-    save_visual_grid(metrics, images, FIGURES_DIR / "tikhonov_deblurring_visual_grid.png")
-    save_error_maps(clean, metrics, images, FIGURES_DIR / "tikhonov_deblurring_error_maps.png")
+    save_metric_curve(metrics, "PSNR", "PSNR", FIGURES_DIR / "08_tikhonov_deblurring_psnr.png")
+    save_metric_curve(metrics, "SSIM", "SSIM", FIGURES_DIR / "08_tikhonov_deblurring_ssim.png")
+    save_visual_grid(metrics, images, FIGURES_DIR / "08_tikhonov_deblurring_visual_grid.png")
+    save_error_maps(clean, metrics, images, FIGURES_DIR / "08_tikhonov_deblurring_error_maps.png")
 
     print("Tikhonov deblurring experiment completed successfully.")
     print(f"Results saved to: {results_path}")

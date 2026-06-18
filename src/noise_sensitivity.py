@@ -148,24 +148,24 @@ def main() -> None:
     clean = img_as_float(data.camera())
     metrics, images_by_sigma = run_experiment(clean)
 
-    results_path = RESULTS_DIR / "noise_sensitivity_results.csv"
+    results_path = RESULTS_DIR / "02_noise_sensitivity_results.csv"
     metrics.to_csv(results_path, index=False)
 
     save_metric_curve(
         metrics,
         metric_name="PSNR",
         ylabel="PSNR",
-        path=FIGURES_DIR / "noise_sensitivity_psnr.png",
+        path=FIGURES_DIR / "02_noise_sensitivity_psnr.png",
     )
     save_metric_curve(
         metrics,
         metric_name="SSIM",
         ylabel="SSIM",
-        path=FIGURES_DIR / "noise_sensitivity_ssim.png",
+        path=FIGURES_DIR / "02_noise_sensitivity_ssim.png",
     )
     save_visual_grid(
         images_by_sigma,
-        path=FIGURES_DIR / "noise_sensitivity_visual_grid.png",
+        path=FIGURES_DIR / "02_noise_sensitivity_visual_grid.png",
     )
 
     print("Noise sensitivity experiment completed successfully.")

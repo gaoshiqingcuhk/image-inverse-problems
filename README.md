@@ -61,9 +61,9 @@ Each script saves CSV files in `results/` and figures in `figures/`.
 The script generates the following files:
 
 ```text
-figures/mvp_denoising_comparison.png
-figures/mvp_error_map.png
-results/mvp_denoising_metrics.csv
+figures/01_mvp_denoising_comparison.png
+figures/01_mvp_error_map.png
+results/01_mvp_denoising_metrics.csv
 data/sample_images/camera_clean.png
 data/sample_images/camera_noisy_sigma_0.10.png
 data/sample_images/camera_denoised_gaussian.png
@@ -95,10 +95,10 @@ Experiment design:
 - Fixed `filter_sigma = 1.0`
 - Tested `noise_sigma` values: `0.05`, `0.10`, `0.15`, `0.20`
 - Output files:
-  - `results/noise_sensitivity_results.csv`
-  - `figures/noise_sensitivity_psnr.png`
-  - `figures/noise_sensitivity_ssim.png`
-  - `figures/noise_sensitivity_visual_grid.png`
+  - `results/02_noise_sensitivity_results.csv`
+  - `figures/02_noise_sensitivity_psnr.png`
+  - `figures/02_noise_sensitivity_ssim.png`
+  - `figures/02_noise_sensitivity_visual_grid.png`
 
 | noise_sigma | Method | PSNR | SSIM |
 |---:|---|---:|---:|
@@ -124,10 +124,10 @@ Experiment design:
 - Fixed `noise_sigma = 0.10`
 - Tested `filter_sigma` values: `0.25`, `0.5`, `1.0`, `1.5`, `2.0`, `3.0`
 - Output files:
-  - `results/filter_sigma_sensitivity_results.csv`
-  - `figures/filter_sigma_sensitivity_psnr.png`
-  - `figures/filter_sigma_sensitivity_ssim.png`
-  - `figures/filter_sigma_sensitivity_visual_grid.png`
+  - `results/03_filter_sigma_sensitivity_results.csv`
+  - `figures/03_filter_sigma_sensitivity_psnr.png`
+  - `figures/03_filter_sigma_sensitivity_ssim.png`
+  - `figures/03_filter_sigma_sensitivity_visual_grid.png`
 
 | Method | noise_sigma | filter_sigma | PSNR | SSIM |
 |---|---:|---:|---:|---:|
@@ -171,10 +171,10 @@ Experiment design:
   - Noisy image
   - Gaussian filter baseline with `filter_sigma = 1.0`
 - Output files:
-  - `results/tikhonov_lambda_extended_results.csv`
-  - `figures/tikhonov_lambda_extended_psnr.png`
-  - `figures/tikhonov_lambda_extended_ssim.png`
-  - `figures/tikhonov_lambda_extended_visual_grid.png`
+  - `results/05_tikhonov_lambda_extended_results.csv`
+  - `figures/05_tikhonov_lambda_extended_psnr.png`
+  - `figures/05_tikhonov_lambda_extended_ssim.png`
+  - `figures/05_tikhonov_lambda_extended_visual_grid.png`
 
 | Method | Parameter | PSNR | SSIM |
 |---|---:|---:|---:|
@@ -231,11 +231,11 @@ Experiment design:
   - Tikhonov `lambda = 1.0`
   - Tikhonov `lambda = 5.0`
 - Output files:
-  - `results/tv_denoising_results.csv`
-  - `figures/tv_weight_sensitivity_psnr.png`
-  - `figures/tv_weight_sensitivity_ssim.png`
-  - `figures/tv_denoising_visual_grid.png`
-  - `figures/tv_error_maps.png`
+  - `results/06_tv_denoising_results.csv`
+  - `figures/06_tv_weight_sensitivity_psnr.png`
+  - `figures/06_tv_weight_sensitivity_ssim.png`
+  - `figures/06_tv_denoising_visual_grid.png`
+  - `figures/06_tv_error_maps.png`
 
 | Method | Parameter | PSNR | SSIM |
 |---|---:|---:|---:|
@@ -274,11 +274,11 @@ computational cost across the main methods.
 
 Output files:
 
-- `results/consolidated_denoising_comparison.csv`
-- `figures/consolidated_psnr_comparison.png`
-- `figures/consolidated_ssim_comparison.png`
-- `figures/consolidated_runtime_comparison.png`
-- `figures/consolidated_visual_comparison.png`
+- `results/07_consolidated_denoising_comparison.csv`
+- `figures/07_consolidated_psnr_comparison.png`
+- `figures/07_consolidated_ssim_comparison.png`
+- `figures/07_consolidated_runtime_comparison.png`
+- `figures/07_consolidated_visual_comparison.png`
 
 | Method | Parameter | PSNR | SSIM | Runtime seconds |
 |---|---:|---:|---:|---:|
@@ -297,6 +297,38 @@ achieves the highest PSNR and SSIM among the tested methods. TV appears to
 better preserve image structure and edges, but it is computationally more
 expensive. Overall, TV gives the best reconstruction quality in this
 experiment, while Gaussian filtering is the fastest restoration method.
+
+## Multi-image Robustness Study
+
+The goal of this study is to test whether the single-image denoising
+conclusions generalize beyond `skimage.data.camera()`. The tested images are
+`camera`, `coins`, `moon`, and `page`. The compared methods are the noisy image
+baseline, Gaussian filtering with `filter_sigma = 1.0`, Tikhonov denoising with
+`lambda = 1.0`, Tikhonov denoising with `lambda = 5.0`, and TV Chambolle
+denoising with `weight = 0.1`.
+
+Output files:
+
+- `results/09_multi_image_denoising_comparison.csv`
+- `figures/09_multi_image_psnr_by_method.png`
+- `figures/09_multi_image_ssim_by_method.png`
+- `figures/09_multi_image_runtime_by_method.png`
+- `figures/09_multi_image_visual_grid.png`
+
+| Method | Average PSNR | Average SSIM | Average runtime seconds |
+|---|---:|---:|---:|
+| Noisy image | 20.26 | 0.315 | 0.000 |
+| Gaussian filter | 26.22 | 0.643 | 0.003 |
+| Tikhonov lambda=1.0 | 26.03 | 0.622 | 0.015 |
+| Tikhonov lambda=5.0 | 25.24 | 0.691 | 0.015 |
+| TV Chambolle weight=0.1 | 28.67 | 0.792 | 0.171 |
+
+The main finding is that TV Chambolle with `weight = 0.1` achieves the best
+PSNR and SSIM on all tested images. Gaussian filtering remains the fastest
+restoration method. Tikhonov with `lambda = 5.0` is not uniformly robust across
+image types: it works very well on `moon` but performs poorly on `page` in
+PSNR. This strengthens the project by addressing the previous limitation that
+only one test image was used.
 
 ## Tikhonov Deblurring
 
@@ -336,11 +368,11 @@ Experiment design:
 - Tested `lambda` values: `0.0001`, `0.0005`, `0.001`, `0.005`, `0.01`,
   `0.05`, `0.1`
 - Output files:
-  - `results/tikhonov_deblurring_results.csv`
-  - `figures/tikhonov_deblurring_psnr.png`
-  - `figures/tikhonov_deblurring_ssim.png`
-  - `figures/tikhonov_deblurring_visual_grid.png`
-  - `figures/tikhonov_deblurring_error_maps.png`
+  - `results/08_tikhonov_deblurring_results.csv`
+  - `figures/08_tikhonov_deblurring_psnr.png`
+  - `figures/08_tikhonov_deblurring_ssim.png`
+  - `figures/08_tikhonov_deblurring_visual_grid.png`
+  - `figures/08_tikhonov_deblurring_error_maps.png`
 
 | Method | Parameter | PSNR | SSIM |
 |---|---:|---:|---:|

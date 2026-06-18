@@ -259,20 +259,20 @@ def main() -> None:
 
     metrics, tikhonov_images, gaussian_result = run_experiment(clean, noisy)
 
-    results_path = RESULTS_DIR / "tikhonov_denoising_results.csv"
+    results_path = RESULTS_DIR / "04_tikhonov_denoising_results.csv"
     metrics.to_csv(results_path, index=False)
 
     save_metric_curve(
         metrics,
         metric_name="PSNR",
         ylabel="PSNR",
-        path=FIGURES_DIR / "tikhonov_lambda_sensitivity_psnr.png",
+        path=FIGURES_DIR / "04_tikhonov_lambda_sensitivity_psnr.png",
     )
     save_metric_curve(
         metrics,
         metric_name="SSIM",
         ylabel="SSIM",
-        path=FIGURES_DIR / "tikhonov_lambda_sensitivity_ssim.png",
+        path=FIGURES_DIR / "04_tikhonov_lambda_sensitivity_ssim.png",
     )
     save_visual_grid(
         clean,
@@ -280,7 +280,7 @@ def main() -> None:
         gaussian_result,
         tikhonov_images,
         metrics,
-        path=FIGURES_DIR / "tikhonov_visual_grid.png",
+        path=FIGURES_DIR / "04_tikhonov_visual_grid.png",
     )
 
     print("Tikhonov denoising experiment completed successfully.")

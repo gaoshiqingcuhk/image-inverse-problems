@@ -95,7 +95,7 @@ def main() -> None:
         print_image_check(f"gaussian_filter filter_sigma={filter_sigma}", clean, denoised)
         print()
 
-    figure_path = FIGURES_DIR / "check_ssim_filter_sigma_0.5.png"
+    figure_path = FIGURES_DIR / "03_check_ssim_filter_sigma_0.5.png"
     save_visual_comparison(
         clean=clean,
         noisy=noisy,

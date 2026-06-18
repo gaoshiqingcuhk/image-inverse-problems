@@ -158,7 +158,7 @@ def main() -> None:
 
     metrics, denoised_images = run_experiment(clean, noisy)
 
-    results_path = RESULTS_DIR / "filter_sigma_sensitivity_results.csv"
+    results_path = RESULTS_DIR / "03_filter_sigma_sensitivity_results.csv"
     metrics.to_csv(results_path, index=False)
 
     noisy_baseline = metrics[metrics["method"] == "noisy_image"].iloc[0]
@@ -167,20 +167,20 @@ def main() -> None:
         metric_name="PSNR",
         ylabel="PSNR",
         baseline_value=noisy_baseline["PSNR"],
-        path=FIGURES_DIR / "filter_sigma_sensitivity_psnr.png",
+        path=FIGURES_DIR / "03_filter_sigma_sensitivity_psnr.png",
     )
     save_metric_curve(
         metrics,
         metric_name="SSIM",
         ylabel="SSIM",
         baseline_value=noisy_baseline["SSIM"],
-        path=FIGURES_DIR / "filter_sigma_sensitivity_ssim.png",
+        path=FIGURES_DIR / "03_filter_sigma_sensitivity_ssim.png",
     )
     save_visual_grid(
         noisy,
         denoised_images,
         metrics,
-        path=FIGURES_DIR / "filter_sigma_sensitivity_visual_grid.png",
+        path=FIGURES_DIR / "03_filter_sigma_sensitivity_visual_grid.png",
     )
 
     print("Filter sigma sensitivity experiment completed successfully.")

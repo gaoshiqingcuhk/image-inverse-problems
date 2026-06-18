@@ -122,21 +122,21 @@ The first experiment compares the noisy image with a Gaussian-filtered image.
 
 Gaussian filtering substantially improves both PSNR and SSIM compared with the noisy image. This confirms that simple smoothing can remove a meaningful amount of additive Gaussian noise. However, visual inspection shows that the restored image is also smoother than the original, especially near edges and fine details. This motivates the study of regularization-based methods.
 
-![MVP denoising comparison](../figures/mvp_denoising_comparison.png)
+![MVP denoising comparison](../figures/01_mvp_denoising_comparison.png)
 
 ### 5.2 Sensitivity Analysis
 
 Two sensitivity experiments were performed for the Gaussian filtering baseline. The first varied the noise level while keeping `filter_sigma = 1.0` fixed. The tested noise levels were `noise_sigma = 0.05, 0.10, 0.15, 0.20`. As the noise level increases, the quality of the noisy image decreases. Gaussian filtering improves the metrics at all tested noise levels, but the final reconstruction quality still becomes worse under stronger noise. This shows that smoothing helps but cannot fully recover information lost under severe noise.
 
-![Noise sensitivity PSNR](../figures/noise_sensitivity_psnr.png)
+![Noise sensitivity PSNR](../figures/02_noise_sensitivity_psnr.png)
 
 The second sensitivity experiment fixed `noise_sigma = 0.10` and varied `filter_sigma = 0.25, 0.5, 1.0, 1.5, 2.0, 3.0`. The PSNR optimum occurs at `filter_sigma = 1.0`, while the SSIM optimum occurs at `filter_sigma = 2.0`. This difference shows that parameter selection depends on the evaluation metric. A parameter value that minimizes pixel-wise error may not be the same value that maximizes structural similarity.
 
-![Filter sigma sensitivity PSNR](../figures/filter_sigma_sensitivity_psnr.png)
+![Filter sigma sensitivity PSNR](../figures/03_filter_sigma_sensitivity_psnr.png)
 
 The Tikhonov denoising lambda sensitivity experiment shows a similar pattern: parameter choice strongly affects performance. Small `lambda` values provide insufficient smoothing, while very large values can over-smooth the reconstruction.
 
-![Tikhonov lambda sensitivity PSNR](../figures/tikhonov_lambda_extended_psnr.png)
+![Tikhonov lambda sensitivity PSNR](../figures/05_tikhonov_lambda_extended_psnr.png)
 
 ### 5.3 Consolidated Denoising Comparison
 
@@ -154,17 +154,26 @@ The noisy image has the lowest PSNR and SSIM, as expected. Gaussian filtering is
 
 TV Chambolle with `weight = 0.1` achieves the highest PSNR and SSIM among all tested denoising methods. This suggests that TV regularization better preserves image structure and edges in this experiment. The trade-off is computational cost: TV is noticeably slower than both Gaussian filtering and FFT-based Tikhonov denoising.
 
-![Consolidated visual comparison](../figures/consolidated_visual_comparison.png)
+![Consolidated visual comparison](../figures/07_consolidated_visual_comparison.png)
 
-![Consolidated PSNR comparison](../figures/consolidated_psnr_comparison.png)
+![Consolidated PSNR comparison](../figures/07_consolidated_psnr_comparison.png)
 
-![Consolidated SSIM comparison](../figures/consolidated_ssim_comparison.png)
+![Consolidated SSIM comparison](../figures/07_consolidated_ssim_comparison.png)
 
-![Consolidated runtime comparison](../figures/consolidated_runtime_comparison.png)
+![Consolidated runtime comparison](../figures/07_consolidated_runtime_comparison.png)
 
 TV denoising is also illustrated visually below.
 
-![TV denoising visual grid](../figures/tv_denoising_visual_grid.png)
+![TV denoising visual grid](../figures/06_tv_denoising_visual_grid.png)
+
+As a Phase 2 robustness check, the main denoising methods were also evaluated
+on four built-in `scikit-image` images: `camera`, `coins`, `moon`, and `page`.
+The same noise level and method parameters were used for all images. In this
+multi-image study, TV Chambolle with `weight = 0.1` achieved the best PSNR and
+SSIM on all tested images, while Gaussian filtering remained the fastest
+restoration method. This supports the main single-image conclusion while also
+showing that Tikhonov `lambda = 5.0` is not uniformly robust across image
+types.
 
 ### 5.4 Tikhonov Deblurring Results
 
@@ -186,11 +195,11 @@ The blurred noisy image is worse than the blurred-only image because noise furth
 
 This result demonstrates why regularization is important for deblurring. Direct or weakly regularized inversion can be unstable, while a moderate regularization level can improve both pixel-wise and structural reconstruction quality.
 
-![Tikhonov deblurring visual grid](../figures/tikhonov_deblurring_visual_grid.png)
+![Tikhonov deblurring visual grid](../figures/08_tikhonov_deblurring_visual_grid.png)
 
-![Tikhonov deblurring PSNR](../figures/tikhonov_deblurring_psnr.png)
+![Tikhonov deblurring PSNR](../figures/08_tikhonov_deblurring_psnr.png)
 
-![Tikhonov deblurring SSIM](../figures/tikhonov_deblurring_ssim.png)
+![Tikhonov deblurring SSIM](../figures/08_tikhonov_deblurring_ssim.png)
 
 ## 6. Discussion
 
@@ -200,15 +209,24 @@ Second, Tikhonov regularization is valuable because it introduces an explicit op
 
 Third, TV denoising achieved the best denoising quality in the tested setting. Its edge-preserving regularization produced the highest PSNR and SSIM among the compared denoising methods. This supports the intuition that an `L1`-type gradient penalty can better preserve edges than the squared-gradient penalty used in Tikhonov regularization. The cost is runtime: TV denoising is slower than both Gaussian filtering and FFT-based Tikhonov denoising.
 
+The multi-image robustness experiment supports the conclusion that TV gives
+the best denoising quality in the tested setting, while Gaussian filtering
+remains the fastest restoration method.
+
 A recurring theme is that optimal parameters depend on the chosen metric. In Gaussian filtering, Tikhonov denoising, and Tikhonov deblurring, the parameter that maximized PSNR was not always the parameter that maximized SSIM. This is important because PSNR and SSIM measure different aspects of image quality. A well-designed inverse problem experiment should therefore report multiple metrics and include visual comparisons rather than relying on a single number.
 
 The deblurring experiment also highlights the instability of inverse problems. When `lambda` is too small, the method attempts to invert the blur too aggressively and can amplify noise. When `lambda` is moderate, the method improves both PSNR and SSIM. This illustrates the practical role of regularization in stabilizing inverse problems.
 
 ## 7. Limitations
 
-This project has several limitations. Only one standard test image was used, so the numerical conclusions may not generalize to other image types. Only grayscale images were tested. The FFT-based solvers use periodic boundary conditions, which are mathematically convenient but may not match real image boundaries. The blur model is synthetic and uses a Gaussian kernel rather than real camera or motion blur.
+This project has several limitations. Although a small multi-image robustness
+check was added, only a few standard grayscale test images were used, so the
+numerical conclusions may not generalize to broader image types. The FFT-based
+solvers use periodic boundary conditions, which are mathematically convenient
+but may not match real image boundaries. The blur model is synthetic and uses a
+Gaussian kernel rather than real camera or motion blur.
 
-The project also does not include learning-based or deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play or learned priors were tested. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
+The project also does not include learning-based or deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play or learned priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
 
 Future work should test more images, multiple noise and blur settings, alternative boundary conditions, TV deblurring, and simple learning-based baselines. These extensions would help determine whether the observed conclusions remain stable across broader image restoration tasks.
 
@@ -224,8 +242,8 @@ Overall, the project demonstrates the value of regularization, parameter sensiti
 
 [1] A. N. Tikhonov and V. Y. Arsenin, *Solutions of Ill-Posed Problems*. Washington, DC: Winston, 1977.
 
-[2] L. I. Rudin, S. Osher, and E. Fatemi, "Nonlinear total variation based noise removal algorithms," *Physica D: Nonlinear Phenomena*, vol. 60, no. 1â€“4, pp. 259â€“268, 1992.
+[2] L. I. Rudin, S. Osher, and E. Fatemi, "Nonlinear total variation based noise removal algorithms," *Physica D: Nonlinear Phenomena*, vol. 60, no. 1â€?, pp. 259â€?68, 1992.
 
-[3] Z. Wang, A. C. Bovik, H. R. Sheikh, and E. P. Simoncelli, "Image quality assessment: From error visibility to structural similarity," *IEEE Transactions on Image Processing*, vol. 13, no. 4, pp. 600â€“612, 2004.
+[3] Z. Wang, A. C. Bovik, H. R. Sheikh, and E. P. Simoncelli, "Image quality assessment: From error visibility to structural similarity," *IEEE Transactions on Image Processing*, vol. 13, no. 4, pp. 600â€?12, 2004.
 
 [4] scikit-image contributors, "scikit-image: Image processing in Python," documentation for `skimage.filters`, `skimage.restoration`, and `skimage.metrics`.

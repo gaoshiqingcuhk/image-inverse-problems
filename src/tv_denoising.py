@@ -371,31 +371,31 @@ def main() -> None:
 
     metrics, images = run_experiment(clean, noisy)
 
-    results_path = RESULTS_DIR / "tv_denoising_results.csv"
+    results_path = RESULTS_DIR / "06_tv_denoising_results.csv"
     metrics.to_csv(results_path, index=False)
 
     save_tv_metric_curve(
         metrics,
         metric_name="PSNR",
         ylabel="PSNR",
-        path=FIGURES_DIR / "tv_weight_sensitivity_psnr.png",
+        path=FIGURES_DIR / "06_tv_weight_sensitivity_psnr.png",
     )
     save_tv_metric_curve(
         metrics,
         metric_name="SSIM",
         ylabel="SSIM",
-        path=FIGURES_DIR / "tv_weight_sensitivity_ssim.png",
+        path=FIGURES_DIR / "06_tv_weight_sensitivity_ssim.png",
     )
     save_visual_grid(
         metrics,
         images,
-        path=FIGURES_DIR / "tv_denoising_visual_grid.png",
+        path=FIGURES_DIR / "06_tv_denoising_visual_grid.png",
     )
     save_error_maps(
         clean,
         metrics,
         images,
-        path=FIGURES_DIR / "tv_error_maps.png",
+        path=FIGURES_DIR / "06_tv_error_maps.png",
     )
 
     print("Total Variation denoising experiment completed successfully.")
