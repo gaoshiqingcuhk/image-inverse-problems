@@ -10,7 +10,7 @@ Image inverse problems arise when the goal is to estimate an unknown clean image
 
 This project studies two fundamental examples: denoising and deblurring. In denoising, the observed image is modeled as a clean image plus random noise. This is a natural starting point because the degradation is easy to simulate and the recovery task can be evaluated directly against the known clean image. In deblurring, the image is first transformed by a blur operator and then corrupted by noise. Deblurring is more challenging because blur weakens or removes high-frequency information such as edges and fine details. A naive inverse operation can therefore become unstable.
 
-Regularization is a central tool for stabilizing inverse problems. It introduces prior assumptions about the desired reconstruction, such as smoothness or edge preservation. This project compares three types of methods: a simple Gaussian filtering baseline, Tikhonov regularization, and Total Variation denoising. These methods are not presented as new algorithms. Instead, they are used to build a small but organized computational study showing how mathematical models, numerical methods, parameter choices, and evaluation metrics interact in image restoration.
+Regularization is a central tool for stabilizing inverse problems. It introduces prior assumptions about the desired reconstruction, such as smoothness or edge preservation. This project compares local filtering, variational regularization, non-local denoising, classical deconvolution, and a lightweight CNN baseline. These methods are not presented as new algorithms. Instead, they are used to build a small but organized computational study showing how mathematical models, numerical methods, parameter choices, and evaluation metrics interact in image restoration.
 
 The main goal of the project is reproducibility. Each experiment produces saved figures, CSV result tables, and clear comparisons using PSNR, SSIM, runtime, and visual inspection. The project is designed as a research-training exercise suitable for developing practical experience in applied mathematics, scientific computing, optimization, and image processing.
 
@@ -105,6 +105,10 @@ In this project, Wiener deconvolution provides a classical baseline for deblurri
 Richardson-Lucy deblurring is a classic iterative deconvolution method. It starts from an initial image estimate and repeatedly updates that estimate using the mismatch between the observed blurred image and the currently reblurred estimate. The parameter `num_iter` controls the number of update steps.
 
 Too few iterations may under-restore the image, while too many iterations may amplify noise or artifacts. In this project, Richardson-Lucy provides an iterative deblurring baseline that complements Tikhonov regularization and Wiener deconvolution.
+
+### 3.8 Tiny CNN Denoising
+
+Phase 8 introduces a lightweight learning-based denoising baseline. The Tiny CNN is trained on noisy and clean image patches and then applied to the `camera` test image. Its purpose is to provide a small, reproducible comparison with classical methods rather than to represent a state-of-the-art deep learning architecture. The experiment also separates one-time training cost from inference runtime.
 
 ## 4. Experimental Setup
 
@@ -273,6 +277,22 @@ For denoising, TV Chambolle is best by both PSNR and SSIM at `noise_sigma = 0.05
 
 For deblurring, Tikhonov `lambda = 0.01` is best by PSNR at all tested blur levels: PSNR `30.554318` at `blur_sigma = 1.0`, `27.749095` at `blur_sigma = 2.0`, and `26.026181` at `blur_sigma = 3.0`. Tikhonov `lambda = 0.05` is best by SSIM at all tested blur levels: SSIM `0.855700`, `0.775812`, and `0.717125`, respectively. Wiener remains competitive, especially at stronger blur, but does not exceed the best Tikhonov setting. Richardson-Lucy improves SSIM over the blurred noisy baseline, but does not improve PSNR and does not outperform Tikhonov or Wiener.
 
+### 5.9 Tiny CNN Denoising Baseline
+
+The Tiny CNN was trained for eight epochs in `3.557896` seconds. Training loss decreased from `0.034897` to `0.003826`, while validation loss decreased from `0.022518` to `0.003810`. The steady decrease in both losses shows that the small model learned the patch-based training task over this short run.
+
+| Method | Parameter | PSNR | SSIM | Runtime seconds |
+|---|---|---:|---:|---:|
+| Noisy image | - | 20.421019 | 0.296393 | 0.000000 |
+| Gaussian filter | filter_sigma = 1.0 | 27.171126 | 0.638712 | 0.005656 |
+| TV Chambolle | weight = 0.1 | 28.302925 | 0.756461 | 0.218245 |
+| NLM denoising | h = 0.1 | 28.710546 | 0.742656 | 0.178762 |
+| Tiny CNN | trained model | 26.479463 | 0.627989 | 0.027087 |
+
+The Tiny CNN clearly improves over the noisy image but does not outperform Gaussian filtering, TV Chambolle, or NLM in PSNR or SSIM on the `camera` test. NLM `h = 0.10` gives the best PSNR, and TV Chambolle gives the best SSIM. Tiny CNN inference is faster than TV and NLM but slower than Gaussian filtering. The numerical results, training history, metadata, trained model, and visual comparisons are saved in `results/16_tiny_cnn_denoising_results.csv`, `results/16_tiny_cnn_training_history.csv`, `results/16_tiny_cnn_metadata.txt`, `models/16_tiny_cnn_denoising.pt`, and the corresponding `figures/16_tiny_cnn_*.png` files.
+
+The experiment can be reproduced from the project root with `.\.venv\Scripts\python.exe src\tiny_cnn_denoising.py`.
+
 ## 6. Discussion
 
 The experiments show several consistent patterns. First, Gaussian filtering is a strong baseline for additive Gaussian noise. It is easy to implement, very fast, and gives a large improvement over the noisy image. However, because it is a generic smoothing method, it can blur edges and fine structures.
@@ -322,6 +342,8 @@ In the tested setting, Richardson-Lucy improves the structural metric compared w
 
 The degradation robustness study shows that denoising rankings are sensitive to noise strength. TV is strongest at mild and strong noise, while NLM `h = 0.10` gives the best PSNR at the moderate noise level. This suggests that a fixed NLM parameter can transfer across some settings but may fail under stronger degradation. In contrast, the deblurring ranking is more stable in the tested grid: Tikhonov `lambda = 0.01` is consistently best by PSNR, and Tikhonov `lambda = 0.05` is consistently best by SSIM. This supports the broader conclusion that robustness should be checked across degradation strengths rather than inferred from a single setting.
 
+The Tiny CNN experiment adds a learning-based perspective without changing the project into a deep learning benchmark. Although its training and validation losses decrease steadily and its reconstruction is much better than the noisy input, the small network does not exceed the tested classical methods in PSNR or SSIM. This is an informative negative result: limited training data and a compact architecture do not automatically provide an advantage over established image priors. The CNN offers a middle ground in inference cost, running faster than TV and NLM but slower than Gaussian filtering.
+
 ## 7. Limitations
 
 This project has several limitations. Although a small multi-image robustness
@@ -331,7 +353,7 @@ solvers use periodic boundary conditions, which are mathematically convenient
 but may not match real image boundaries. The blur model is synthetic and uses a
 Gaussian kernel rather than real camera or motion blur.
 
-The project also does not include learning-based or deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play or learned priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The Wiener experiment is still based on a synthetic Gaussian blur model and a limited set of images. The multi-image deblurring experiment still uses synthetic Gaussian blur and a small set of standard images, so broader datasets and real blur models are needed for stronger conclusions. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
+The project does not include large-scale training or state-of-the-art deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The Wiener experiment is still based on a synthetic Gaussian blur model and a limited set of images. The multi-image deblurring experiment still uses synthetic Gaussian blur and a small set of standard images, so broader datasets and real blur models are needed for stronger conclusions. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
 
 The NLM experiment is currently limited to a single standard image and a small set of hand-chosen h values.
 
@@ -341,7 +363,9 @@ The Richardson-Lucy experiment is currently limited to a single synthetic Gaussi
 
 The degradation robustness study uses a small fixed grid of synthetic degradations, so it does not exhaustively test all noise levels, blur models, or parameter choices.
 
-Future work should test more images, multiple noise and blur settings, alternative boundary conditions, TV deblurring, and simple learning-based baselines. These extensions would help determine whether the observed conclusions remain stable across broader image restoration tasks.
+The Tiny CNN uses a small architecture, limited patch-based training data, one noise level, and one test image. Its result should therefore be interpreted only as a lightweight baseline, not as a general assessment of modern learning-based restoration.
+
+Future work should test more images, multiple noise and blur settings, alternative boundary conditions, TV deblurring, and larger learning-based baselines. These extensions would help determine whether the observed conclusions remain stable across broader image restoration tasks.
 
 ## 8. Conclusion
 

@@ -58,6 +58,7 @@ Run the main experiment scripts from the project root:
 .\.venv\Scripts\python.exe src\multi_image_deblurring_comparison.py
 .\.venv\Scripts\python.exe src\richardson_lucy_deblurring.py
 .\.venv\Scripts\python.exe src\degradation_robustness_study.py
+.\.venv\Scripts\python.exe src\tiny_cnn_denoising.py
 ```
 
 Each script saves CSV files in `results/` and figures in `figures/`.
@@ -666,6 +667,56 @@ For deblurring, the ranking is more stable in this fixed grid. Tikhonov
 remains competitive, especially at stronger blur, but does not exceed the best
 Tikhonov setting. Richardson-Lucy improves SSIM over the blurred noisy baseline
 but does not improve PSNR and does not outperform Tikhonov or Wiener.
+
+## Tiny CNN Denoising Baseline
+
+Phase 8 adds a lightweight learning-based denoising baseline. A small
+convolutional neural network is trained on noisy and clean image patches and
+then evaluated on the `camera` test image with `noise_sigma = 0.10`. This is a
+compact educational baseline with limited training data, not a
+state-of-the-art deep learning method.
+
+Training took `3.557896` seconds. Both training and validation loss decreased
+steadily over eight epochs:
+
+| Epoch | Training loss | Validation loss |
+|---:|---:|---:|
+| 1 | 0.034897 | 0.022518 |
+| 2 | 0.010471 | 0.007086 |
+| 3 | 0.005626 | 0.005000 |
+| 4 | 0.004589 | 0.004741 |
+| 5 | 0.004336 | 0.004493 |
+| 6 | 0.004039 | 0.004035 |
+| 7 | 0.003892 | 0.004040 |
+| 8 | 0.003826 | 0.003810 |
+
+| Method | Parameter | PSNR | SSIM | Runtime seconds |
+|---|---|---:|---:|---:|
+| Noisy image | - | 20.421019 | 0.296393 | 0.000000 |
+| Gaussian filter | filter_sigma = 1.0 | 27.171126 | 0.638712 | 0.005656 |
+| TV Chambolle | weight = 0.1 | 28.302925 | 0.756461 | 0.218245 |
+| NLM denoising | h = 0.1 | 28.710546 | 0.742656 | 0.178762 |
+| Tiny CNN | trained model | 26.479463 | 0.627989 | 0.027087 |
+
+The Tiny CNN clearly improves over the noisy image, but it does not outperform
+Gaussian filtering, TV Chambolle, or NLM in PSNR or SSIM on this test. NLM
+`h = 0.10` gives the best PSNR, while TV Chambolle gives the best SSIM. Tiny
+CNN inference is faster than TV and NLM but slower than Gaussian filtering.
+The result is useful because it shows that a small CNN trained on limited data
+does not automatically outperform well-chosen classical image priors.
+
+Output files:
+
+- `results/16_tiny_cnn_denoising_results.csv`
+- `results/16_tiny_cnn_training_history.csv`
+- `results/16_tiny_cnn_metadata.txt`
+- `models/16_tiny_cnn_denoising.pt`
+- `figures/16_tiny_cnn_training_loss.png`
+- `figures/16_tiny_cnn_denoising_psnr.png`
+- `figures/16_tiny_cnn_denoising_ssim.png`
+- `figures/16_tiny_cnn_denoising_runtime.png`
+- `figures/16_tiny_cnn_denoising_visual_grid.png`
+- `figures/16_tiny_cnn_denoising_error_maps.png`
 
 ## Next Steps
 
