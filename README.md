@@ -57,6 +57,7 @@ Run the main experiment scripts from the project root:
 .\.venv\Scripts\python.exe src\wiener_deblurring.py
 .\.venv\Scripts\python.exe src\multi_image_deblurring_comparison.py
 .\.venv\Scripts\python.exe src\richardson_lucy_deblurring.py
+.\.venv\Scripts\python.exe src\degradation_robustness_study.py
 ```
 
 Each script saves CSV files in `results/` and figures in `figures/`.
@@ -613,6 +614,58 @@ Too many iterations reduce both PSNR and SSIM, and runtime increases with
 iteration count. This makes Richardson-Lucy a useful iterative deconvolution
 baseline, but in this setting it is less stable than the selected Tikhonov and
 Wiener methods and is sensitive to the number of iterations.
+
+## Degradation Robustness Study
+
+This phase tests whether earlier conclusions remain stable under different
+degradation strengths. The denoising study uses `noise_sigma = 0.05, 0.10,
+0.20`. The deblurring study uses `blur_sigma = 1.0, 2.0, 3.0` with fixed
+`noise_sigma = 0.01`. Method parameters are fixed from earlier phases rather
+than re-tuned for each degradation level, so this is a robustness study rather
+than a per-condition optimization.
+
+Output files:
+
+- `results/15_degradation_robustness_denoising.csv`
+- `results/15_degradation_robustness_deblurring.csv`
+- `figures/15_degradation_robustness_denoising_psnr.png`
+- `figures/15_degradation_robustness_denoising_ssim.png`
+- `figures/15_degradation_robustness_denoising_runtime.png`
+- `figures/15_degradation_robustness_deblurring_psnr.png`
+- `figures/15_degradation_robustness_deblurring_ssim.png`
+- `figures/15_degradation_robustness_deblurring_runtime.png`
+- `figures/15_degradation_robustness_summary.png`
+
+### Denoising Robustness Summary
+
+| noise_sigma | Best PSNR method | Best PSNR | Best SSIM method | Best SSIM |
+|---:|---|---:|---|---:|
+| 0.05 | TV Chambolle | 29.256535 | TV Chambolle | 0.794296 |
+| 0.10 | NLM h = 0.10 | 28.687700 | TV Chambolle | 0.756777 |
+| 0.20 | TV Chambolle | 23.605989 | TV Chambolle | 0.473651 |
+
+At mild noise (`noise_sigma = 0.05`), TV Chambolle is best by both PSNR and
+SSIM. At moderate noise (`noise_sigma = 0.10`), NLM `h = 0.10` is best by
+PSNR, while TV Chambolle remains best by SSIM. At stronger noise
+(`noise_sigma = 0.20`), TV Chambolle is again best by both metrics. NLM is
+competitive at mild and moderate noise, but with fixed `h = 0.10` it is not
+robust at `noise_sigma = 0.20`. Gaussian filtering remains the fastest
+restoration method. Overall, the method ranking changes with noise strength.
+
+### Deblurring Robustness Summary
+
+| blur_sigma | Best PSNR method | Best PSNR | Best SSIM method | Best SSIM |
+|---:|---|---:|---|---:|
+| 1.0 | Tikhonov lambda = 0.01 | 30.554318 | Tikhonov lambda = 0.05 | 0.855700 |
+| 2.0 | Tikhonov lambda = 0.01 | 27.749095 | Tikhonov lambda = 0.05 | 0.775812 |
+| 3.0 | Tikhonov lambda = 0.01 | 26.026181 | Tikhonov lambda = 0.05 | 0.717125 |
+
+For deblurring, the ranking is more stable in this fixed grid. Tikhonov
+`lambda = 0.01` is best by PSNR at all tested blur levels, while Tikhonov
+`lambda = 0.05` is best by SSIM at all tested blur levels. Wiener deblurring
+remains competitive, especially at stronger blur, but does not exceed the best
+Tikhonov setting. Richardson-Lucy improves SSIM over the blurred noisy baseline
+but does not improve PSNR and does not outperform Tikhonov or Wiener.
 
 ## Next Steps
 

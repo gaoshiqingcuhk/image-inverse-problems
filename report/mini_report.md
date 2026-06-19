@@ -265,6 +265,14 @@ Phase 6 adds a Richardson-Lucy deblurring baseline on the `camera` image. The fu
 
 The best Richardson-Lucy PSNR occurs at `num_iter = 5`, with PSNR `23.738545`, SSIM `0.738875`, and runtime `0.093209` seconds. The best Richardson-Lucy SSIM occurs at `num_iter = 10`, with PSNR `22.563644`, SSIM `0.745706`, and runtime `0.177121` seconds. Richardson-Lucy does not improve over the blurred noisy observation in PSNR, since the blurred noisy image has PSNR `25.419450`. However, it does improve over the blurred noisy SSIM value of `0.699460`. The selected Tikhonov and Wiener baselines run in about `0.019` seconds, while Richardson-Lucy runtime increases from `0.093209` seconds at `num_iter = 5` to `0.914123` seconds at `num_iter = 50`. The tested Richardson-Lucy settings do not outperform the best Tikhonov or best Wiener baselines. Increasing the iteration count reduces both PSNR and SSIM after the best range, showing that iterative deconvolution can become sensitive to noise or artifacts.
 
+### 5.8 Degradation Robustness Study
+
+Phase 7 tests fixed denoising and deblurring methods under different degradation strengths. The full denoising table is saved in `results/15_degradation_robustness_denoising.csv`, and the full deblurring table is saved in `results/15_degradation_robustness_deblurring.csv`. Visual summaries are saved in `figures/15_degradation_robustness_denoising_psnr.png`, `figures/15_degradation_robustness_denoising_ssim.png`, `figures/15_degradation_robustness_deblurring_psnr.png`, `figures/15_degradation_robustness_deblurring_ssim.png`, and `figures/15_degradation_robustness_summary.png`.
+
+For denoising, TV Chambolle is best by both PSNR and SSIM at `noise_sigma = 0.05`, with PSNR `29.256535` and SSIM `0.794296`. At `noise_sigma = 0.10`, NLM `h = 0.10` is best by PSNR with PSNR `28.687700`, while TV Chambolle is best by SSIM with SSIM `0.756777`. At `noise_sigma = 0.20`, TV Chambolle is again best by both PSNR and SSIM, with PSNR `23.605989` and SSIM `0.473651`. These results show that NLM is competitive at mild and moderate noise, but is not robust at the strongest tested noise level when `h = 0.10` is fixed.
+
+For deblurring, Tikhonov `lambda = 0.01` is best by PSNR at all tested blur levels: PSNR `30.554318` at `blur_sigma = 1.0`, `27.749095` at `blur_sigma = 2.0`, and `26.026181` at `blur_sigma = 3.0`. Tikhonov `lambda = 0.05` is best by SSIM at all tested blur levels: SSIM `0.855700`, `0.775812`, and `0.717125`, respectively. Wiener remains competitive, especially at stronger blur, but does not exceed the best Tikhonov setting. Richardson-Lucy improves SSIM over the blurred noisy baseline, but does not improve PSNR and does not outperform Tikhonov or Wiener.
+
 ## 6. Discussion
 
 The experiments show several consistent patterns. First, Gaussian filtering is a strong baseline for additive Gaussian noise. It is easy to implement, very fast, and gives a large improvement over the noisy image. However, because it is a generic smoothing method, it can blur edges and fine structures.
@@ -312,6 +320,8 @@ Richardson-Lucy complements the earlier deblurring methods by adding an iterativ
 
 In the tested setting, Richardson-Lucy improves the structural metric compared with the blurred noisy image, but it does not improve PSNR and does not exceed the selected Tikhonov or Wiener results. Its performance depends strongly on the iteration count: too many iterations reduce both PSNR and SSIM. This behavior is consistent with the general inverse-problem theme that stronger inversion can also amplify noise or artifacts. Richardson-Lucy is therefore a useful iterative baseline, but in this synthetic Gaussian blur plus noise setting it is less stable than the selected Tikhonov and Wiener methods.
 
+The degradation robustness study shows that denoising rankings are sensitive to noise strength. TV is strongest at mild and strong noise, while NLM `h = 0.10` gives the best PSNR at the moderate noise level. This suggests that a fixed NLM parameter can transfer across some settings but may fail under stronger degradation. In contrast, the deblurring ranking is more stable in the tested grid: Tikhonov `lambda = 0.01` is consistently best by PSNR, and Tikhonov `lambda = 0.05` is consistently best by SSIM. This supports the broader conclusion that robustness should be checked across degradation strengths rather than inferred from a single setting.
+
 ## 7. Limitations
 
 This project has several limitations. Although a small multi-image robustness
@@ -328,6 +338,8 @@ The NLM experiment is currently limited to a single standard image and a small s
 The multi-image NLM experiment uses only two fixed h values selected from the camera image, so it does not exhaustively tune NLM for each image.
 
 The Richardson-Lucy experiment is currently limited to a single synthetic Gaussian blur setting and a small set of hand-chosen iteration counts.
+
+The degradation robustness study uses a small fixed grid of synthetic degradations, so it does not exhaustively test all noise levels, blur models, or parameter choices.
 
 Future work should test more images, multiple noise and blur settings, alternative boundary conditions, TV deblurring, and simple learning-based baselines. These extensions would help determine whether the observed conclusions remain stable across broader image restoration tasks.
 
