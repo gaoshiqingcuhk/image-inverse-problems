@@ -74,7 +74,13 @@ In the implementation, the `scikit-image` function `denoise_tv_chambolle` is use
 
 TV denoising is especially relevant for image inverse problems because it illustrates a different type of prior assumption. Instead of simply assuming smoothness everywhere, it favors images that are mostly smooth but may contain sharp edges.
 
-### 3.4 Tikhonov Deblurring
+### 3.4 Non-local Means Denoising
+
+Non-local Means (NLM) is a patch-based non-local denoising method. Instead of smoothing only nearby pixels, it compares small image patches and gives larger weights to pixels whose surrounding patches are similar. This makes NLM different from Gaussian filtering, which is purely local, and from Tikhonov or TV denoising, which are variational regularization methods.
+
+The main parameter is `h`, which controls filtering strength. Smaller `h` values are more conservative and may leave residual noise. Larger `h` values perform stronger averaging but may blur details. In this project, NLM provides a non-local image prior baseline for denoising.
+
+### 3.5 Tikhonov Deblurring
 
 For deblurring, the Tikhonov model becomes
 
@@ -88,7 +94,7 @@ Deblurring is more unstable than denoising because blur suppresses high-frequenc
 
 The deblurring implementation also uses an FFT-based solver with periodic boundary conditions. The blur operator is represented in the frequency domain, and Tikhonov regularization stabilizes the division by small frequency components.
 
-### 3.5 Wiener Deconvolution
+### 3.6 Wiener Deconvolution
 
 Wiener deconvolution is a frequency-domain regularized inverse filter for deblurring. Direct inverse filtering is unstable when the blur operator has very small frequency components, because dividing by those values can strongly amplify noise. The Wiener formulation stabilizes this process by adding a positive `balance` parameter in the denominator of the inverse filter.
 
@@ -181,6 +187,20 @@ restoration method. This supports the main single-image conclusion while also
 showing that Tikhonov `lambda = 5.0` is not uniformly robust across image
 types.
 
+Phase 5A adds a Non-local Means denoising baseline on the `camera` image with
+`noise_sigma = 0.10`. The full results are saved in
+`results/12_nlm_denoising_results.csv`, with visual summaries in
+`figures/12_nlm_denoising_psnr.png`,
+`figures/12_nlm_denoising_ssim.png`, and
+`figures/12_nlm_denoising_visual_grid.png`. The experiment compares NLM
+against the noisy image, Gaussian filtering, and TV Chambolle. Among the tested
+NLM values, the best PSNR occurs at `h = 0.08` with PSNR `28.815080`, while
+the best NLM SSIM occurs at `h = 0.10` with SSIM `0.742657`. NLM improves
+clearly over the noisy image and Gaussian filtering. It achieves the highest
+PSNR among the tested methods, but TV Chambolle remains best by SSIM with SSIM
+`0.756463`. The sensitivity to `h` is also visible: `h = 0.04` is too
+conservative and leaves substantial residual noise.
+
 ### 5.4 Tikhonov Deblurring Results
 
 The deblurring experiment applies Gaussian blur and small Gaussian noise, then solves a Tikhonov deblurring problem over several values of `lambda`.
@@ -231,6 +251,14 @@ The multi-image robustness experiment supports the conclusion that TV gives
 the best denoising quality in the tested setting, while Gaussian filtering
 remains the fastest restoration method.
 
+The NLM experiment adds a complementary denoising perspective. Gaussian
+filtering uses local smoothing, Tikhonov and TV use variational regularization,
+and NLM uses patch similarity as a non-local image prior. In the single-image
+NLM test, this patch-based prior gives the best PSNR among the tested methods,
+while TV remains stronger by SSIM. This reinforces that method ranking depends
+on the evaluation metric. NLM also has a higher computational cost than the
+Gaussian baseline.
+
 A recurring theme is that optimal parameters depend on the chosen metric. In Gaussian filtering, Tikhonov denoising, and Tikhonov deblurring, the parameter that maximized PSNR was not always the parameter that maximized SSIM. This is important because PSNR and SSIM measure different aspects of image quality. A well-designed inverse problem experiment should therefore report multiple metrics and include visual comparisons rather than relying on a single number.
 
 The deblurring experiment also highlights the instability of inverse problems. When `lambda` is too small, the method attempts to invert the blur too aggressively and can amplify noise. When `lambda` is moderate, the method improves both PSNR and SSIM. This illustrates the practical role of regularization in stabilizing inverse problems.
@@ -253,6 +281,8 @@ but may not match real image boundaries. The blur model is synthetic and uses a
 Gaussian kernel rather than real camera or motion blur.
 
 The project also does not include learning-based or deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play or learned priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The Wiener experiment is still based on a synthetic Gaussian blur model and a limited set of images. The multi-image deblurring experiment still uses synthetic Gaussian blur and a small set of standard images, so broader datasets and real blur models are needed for stronger conclusions. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
+
+The NLM experiment is currently limited to a single standard image and a small set of hand-chosen h values.
 
 Future work should test more images, multiple noise and blur settings, alternative boundary conditions, TV deblurring, and simple learning-based baselines. These extensions would help determine whether the observed conclusions remain stable across broader image restoration tasks.
 

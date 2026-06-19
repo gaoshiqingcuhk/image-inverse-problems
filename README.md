@@ -50,6 +50,7 @@ Run the main experiment scripts from the project root:
 .\.venv\Scripts\python.exe src\filter_sigma_sensitivity.py
 .\.venv\Scripts\python.exe src\tikhonov_lambda_extended.py
 .\.venv\Scripts\python.exe src\tv_denoising.py
+.\.venv\Scripts\python.exe src\nlm_denoising.py
 .\.venv\Scripts\python.exe src\consolidated_denoising_comparison.py
 .\.venv\Scripts\python.exe src\tikhonov_deblurring.py
 .\.venv\Scripts\python.exe src\wiener_deblurring.py
@@ -260,6 +261,48 @@ outperforms both Gaussian filtering and Tikhonov regularization. Large TV
 piecewise-constant artifacts. TV gives the best reconstruction quality in this
 denoising experiment, but it is computationally more expensive than Gaussian
 filtering and FFT-based Tikhonov denoising.
+
+## Non-local Means Denoising Baseline
+
+Non-local Means (NLM) is a patch-based denoising method. Unlike Gaussian
+filtering, it does not rely only on spatial closeness. Instead, it compares
+small image patches and averages pixels from similar patches, even when those
+patches are not immediately adjacent. This gives NLM a non-local image prior
+based on repeated or similar structures.
+
+The key parameter is `h`, which controls filtering strength. Smaller `h`
+values are more conservative and may leave noise. Larger `h` values produce
+stronger denoising, but they may blur details if the averaging becomes too
+aggressive. This experiment compares NLM against Gaussian filtering and TV
+denoising on the `camera` image with `noise_sigma = 0.10`.
+
+Output files:
+
+- `results/12_nlm_denoising_results.csv`
+- `figures/12_nlm_denoising_psnr.png`
+- `figures/12_nlm_denoising_ssim.png`
+- `figures/12_nlm_denoising_runtime.png`
+- `figures/12_nlm_denoising_visual_grid.png`
+- `figures/12_nlm_denoising_error_maps.png`
+
+| Method | Parameter | PSNR | SSIM | Runtime seconds |
+|---|---:|---:|---:|---:|
+| Noisy image | - | 20.421019 | 0.296393 | 0.000000 |
+| Gaussian filter | filter_sigma = 1.0 | 27.171126 | 0.638713 | 0.008483 |
+| TV Chambolle | weight = 0.1 | 28.302925 | 0.756463 | 0.279427 |
+| NLM denoising | h = 0.08 | 28.815080 | 0.730339 | 0.153047 |
+| NLM denoising | h = 0.10 | 28.710546 | 0.742657 | 0.161924 |
+
+NLM improves clearly over the noisy image and also improves over Gaussian
+filtering in this experiment. The best NLM PSNR occurs at `h = 0.08`, while
+the best NLM SSIM occurs at `h = 0.10`, so the preferred `h` value depends on
+the metric. NLM achieves the highest PSNR among the tested methods, but TV
+Chambolle remains best by SSIM. The `h` sensitivity is important: `h = 0.04`
+is too conservative and leaves substantial residual noise. The trade-off is
+runtime: NLM is slower than Gaussian filtering, although it is faster than TV
+in this local run. This adds a non-local, patch-similarity prior to the
+denoising part of the project, complementing local smoothing and variational
+regularization.
 
 ## Consolidated Denoising Comparison
 
