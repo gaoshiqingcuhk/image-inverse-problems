@@ -53,6 +53,7 @@ Run the main experiment scripts from the project root:
 .\.venv\Scripts\python.exe src\consolidated_denoising_comparison.py
 .\.venv\Scripts\python.exe src\tikhonov_deblurring.py
 .\.venv\Scripts\python.exe src\wiener_deblurring.py
+.\.venv\Scripts\python.exe src\multi_image_deblurring_comparison.py
 ```
 
 Each script saves CSV files in `results/` and figures in `figures/`.
@@ -436,6 +437,54 @@ in SSIM. Very small `balance` values are unstable and produce poor metrics,
 while very large values are more conservative and leave stronger blur. This
 adds a classical frequency-domain baseline to the deblurring part of the
 project and reinforces that deblurring quality is parameter-sensitive.
+
+## Multi-image Deblurring Robustness Study
+
+The goal of this study is to test whether conclusions from the single-image
+`camera` deblurring experiment generalize across multiple image structures.
+The tested images are `camera`, `coins`, `moon`, and `page`. Each image is
+degraded using Gaussian blur with `blur_sigma = 2.0` and Gaussian noise with
+`noise_sigma = 0.01`.
+
+The compared methods are:
+
+- Blurred noisy baseline
+- Tikhonov deblurring with `lambda = 0.01`
+- Tikhonov deblurring with `lambda = 0.05`
+- Wiener deblurring with `balance = 0.01`
+- Wiener deblurring with `balance = 0.03`
+
+This is a fixed-parameter robustness study. The parameters are selected from
+the single-image deblurring experiments and are not tuned separately for each
+image.
+
+Output files:
+
+- `results/11_multi_image_deblurring_comparison.csv`
+- `figures/11_multi_image_deblurring_psnr_by_method.png`
+- `figures/11_multi_image_deblurring_ssim_by_method.png`
+- `figures/11_multi_image_deblurring_runtime_by_method.png`
+- `figures/11_multi_image_deblurring_visual_grid.png`
+
+| Method | Average PSNR | Average SSIM | Average runtime seconds |
+|---|---:|---:|---:|
+| Blurred noisy | 25.85 | 0.688 | 0.000 |
+| Tikhonov lambda = 0.01 | 27.25 | 0.735 | 0.862 |
+| Tikhonov lambda = 0.05 | 27.40 | 0.762 | 0.845 |
+| Wiener balance = 0.01 | 27.04 | 0.726 | 0.913 |
+| Wiener balance = 0.03 | 26.42 | 0.760 | 0.852 |
+
+In this fixed-parameter study, Tikhonov deblurring with `lambda = 0.05` gives
+the highest average PSNR and SSIM. The blurred noisy baseline is fastest
+because no restoration is applied; among restoration methods, Tikhonov
+`lambda = 0.05` is slightly fastest on average in this run. Wiener
+deconvolution remains competitive on some images and metrics, especially with
+`balance = 0.01` for PSNR on `page` and with `balance = 0.03` for SSIM on
+`coins`, but it is not uniformly better than Tikhonov. The results are clearly
+image-dependent, with `moon` behaving differently from more textured or
+document-like images. This extends the deblurring part of the project from a
+single-image comparison to a small robustness study across several standard
+test images.
 
 ## Next Steps
 

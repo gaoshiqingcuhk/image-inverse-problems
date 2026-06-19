@@ -213,6 +213,12 @@ Phase 3 adds a Wiener deblurring baseline using the same synthetic Gaussian blur
 
 The best Wiener PSNR occurs at `balance = 0.01`, with PSNR `27.629829` and SSIM `0.735582`. The best Wiener SSIM occurs at `balance = 0.03`, with PSNR `26.743149` and SSIM `0.772423`. Both settings improve substantially over the blurred noisy observation, which has PSNR `25.417081` and SSIM `0.698806`. Compared with the selected Tikhonov results, Wiener comes close but does not exceed Tikhonov `lambda = 0.01` in PSNR or Tikhonov `lambda = 0.05` in SSIM. Very small Wiener balance values are unstable in this experiment, while larger values are more conservative.
 
+### 5.6 Multi-image Deblurring Robustness Study
+
+Phase 4 extends the deblurring comparison from the single `camera` image to four built-in `scikit-image` images: `camera`, `coins`, `moon`, and `page`. The full result table is saved in `results/11_multi_image_deblurring_comparison.csv`, with visual summaries in `figures/11_multi_image_deblurring_psnr_by_method.png`, `figures/11_multi_image_deblurring_ssim_by_method.png`, and `figures/11_multi_image_deblurring_visual_grid.png`.
+
+Using fixed parameters from the single-image deblurring study, Tikhonov `lambda = 0.05` gives the highest average PSNR (`27.40`) and average SSIM (`0.762`). Tikhonov `lambda = 0.01` gives average PSNR `27.25` and average SSIM `0.735`. Wiener `balance = 0.01` gives average PSNR `27.04` and average SSIM `0.726`, while Wiener `balance = 0.03` gives average PSNR `26.42` and average SSIM `0.760`. Thus, Wiener remains competitive on some image types and metrics, but Tikhonov is more stable on average in this fixed-parameter robustness study. The results also show that deblurring performance is image-dependent.
+
 ## 6. Discussion
 
 The experiments show several consistent patterns. First, Gaussian filtering is a strong baseline for additive Gaussian noise. It is easy to implement, very fast, and gives a large improvement over the noisy image. However, because it is a generic smoothing method, it can blur edges and fine structures.
@@ -233,6 +239,10 @@ Wiener deconvolution and Tikhonov deblurring are both regularized deblurring met
 
 The Wiener comparison reinforces that deblurring is parameter-sensitive. Aggressive inverse filtering can produce severe artifacts, while overly conservative settings leave blur. This is consistent with the Tikhonov deblurring results and supports the use of multiple metrics and visual inspection.
 
+The multi-image deblurring experiment extends this comparison beyond a single test image. It uses fixed parameters selected from the single-image deblurring study rather than tuning each image separately. This makes the experiment a robustness check: it asks whether settings that work well on `camera` also remain effective for images with different structures.
+
+The Phase 4 results suggest that Tikhonov deblurring is more stable on average for the tested images, while Wiener deconvolution remains competitive for some image-metric combinations. The variation across `camera`, `coins`, `moon`, and `page` reinforces that deblurring performance depends on image structure as well as parameter choice.
+
 ## 7. Limitations
 
 This project has several limitations. Although a small multi-image robustness
@@ -242,7 +252,7 @@ solvers use periodic boundary conditions, which are mathematically convenient
 but may not match real image boundaries. The blur model is synthetic and uses a
 Gaussian kernel rather than real camera or motion blur.
 
-The project also does not include learning-based or deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play or learned priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The Wiener experiment is still based on a synthetic Gaussian blur model and a limited set of images. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
+The project also does not include learning-based or deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play or learned priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The Wiener experiment is still based on a synthetic Gaussian blur model and a limited set of images. The multi-image deblurring experiment still uses synthetic Gaussian blur and a small set of standard images, so broader datasets and real blur models are needed for stronger conclusions. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
 
 Future work should test more images, multiple noise and blur settings, alternative boundary conditions, TV deblurring, and simple learning-based baselines. These extensions would help determine whether the observed conclusions remain stable across broader image restoration tasks.
 
