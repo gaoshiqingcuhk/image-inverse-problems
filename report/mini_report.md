@@ -88,6 +88,12 @@ Deblurring is more unstable than denoising because blur suppresses high-frequenc
 
 The deblurring implementation also uses an FFT-based solver with periodic boundary conditions. The blur operator is represented in the frequency domain, and Tikhonov regularization stabilizes the division by small frequency components.
 
+### 3.5 Wiener Deconvolution
+
+Wiener deconvolution is a frequency-domain regularized inverse filter for deblurring. Direct inverse filtering is unstable when the blur operator has very small frequency components, because dividing by those values can strongly amplify noise. The Wiener formulation stabilizes this process by adding a positive `balance` parameter in the denominator of the inverse filter.
+
+In this project, Wiener deconvolution provides a classical baseline for deblurring. Smaller `balance` values apply more aggressive deblurring but may introduce noise amplification and ringing artifacts. Larger `balance` values are more conservative and stable, but they may leave more residual blur.
+
 ## 4. Experimental Setup
 
 All experiments use the built-in grayscale image `skimage.data.camera()`. Pixel values are converted to floating-point values in `[0, 1]`. Randomness is controlled by fixed seeds to make the results reproducible.
@@ -201,6 +207,12 @@ This result demonstrates why regularization is important for deblurring. Direct 
 
 ![Tikhonov deblurring SSIM](../figures/08_tikhonov_deblurring_ssim.png)
 
+### 5.5 Wiener Deblurring Baseline
+
+Phase 3 adds a Wiener deblurring baseline using the same synthetic Gaussian blur setting as the Tikhonov deblurring experiment. The full result table is saved in `results/10_wiener_deblurring_results.csv`, with visual summaries in `figures/10_wiener_deblurring_psnr.png`, `figures/10_wiener_deblurring_ssim.png`, and `figures/10_wiener_deblurring_visual_grid.png`.
+
+The best Wiener PSNR occurs at `balance = 0.01`, with PSNR `27.629829` and SSIM `0.735582`. The best Wiener SSIM occurs at `balance = 0.03`, with PSNR `26.743149` and SSIM `0.772423`. Both settings improve substantially over the blurred noisy observation, which has PSNR `25.417081` and SSIM `0.698806`. Compared with the selected Tikhonov results, Wiener comes close but does not exceed Tikhonov `lambda = 0.01` in PSNR or Tikhonov `lambda = 0.05` in SSIM. Very small Wiener balance values are unstable in this experiment, while larger values are more conservative.
+
 ## 6. Discussion
 
 The experiments show several consistent patterns. First, Gaussian filtering is a strong baseline for additive Gaussian noise. It is easy to implement, very fast, and gives a large improvement over the noisy image. However, because it is a generic smoothing method, it can blur edges and fine structures.
@@ -217,6 +229,10 @@ A recurring theme is that optimal parameters depend on the chosen metric. In Gau
 
 The deblurring experiment also highlights the instability of inverse problems. When `lambda` is too small, the method attempts to invert the blur too aggressively and can amplify noise. When `lambda` is moderate, the method improves both PSNR and SSIM. This illustrates the practical role of regularization in stabilizing inverse problems.
 
+Wiener deconvolution and Tikhonov deblurring are both regularized deblurring methods, but they stabilize the inverse problem in different ways. Tikhonov deblurring uses an explicit optimization objective with smoothness regularization on the image gradient. Wiener deconvolution instead stabilizes inverse filtering directly in the frequency domain through the `balance` parameter.
+
+The Wiener comparison reinforces that deblurring is parameter-sensitive. Aggressive inverse filtering can produce severe artifacts, while overly conservative settings leave blur. This is consistent with the Tikhonov deblurring results and supports the use of multiple metrics and visual inspection.
+
 ## 7. Limitations
 
 This project has several limitations. Although a small multi-image robustness
@@ -226,7 +242,7 @@ solvers use periodic boundary conditions, which are mathematically convenient
 but may not match real image boundaries. The blur model is synthetic and uses a
 Gaussian kernel rather than real camera or motion blur.
 
-The project also does not include learning-based or deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play or learned priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
+The project also does not include learning-based or deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play or learned priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The Wiener experiment is still based on a synthetic Gaussian blur model and a limited set of images. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
 
 Future work should test more images, multiple noise and blur settings, alternative boundary conditions, TV deblurring, and simple learning-based baselines. These extensions would help determine whether the observed conclusions remain stable across broader image restoration tasks.
 
@@ -242,8 +258,10 @@ Overall, the project demonstrates the value of regularization, parameter sensiti
 
 [1] A. N. Tikhonov and V. Y. Arsenin, *Solutions of Ill-Posed Problems*. Washington, DC: Winston, 1977.
 
-[2] L. I. Rudin, S. Osher, and E. Fatemi, "Nonlinear total variation based noise removal algorithms," *Physica D: Nonlinear Phenomena*, vol. 60, no. 1â€?, pp. 259â€?68, 1992.
+[2] L. I. Rudin, S. Osher, and E. Fatemi, "Nonlinear total variation based noise removal algorithms," *Physica D: Nonlinear Phenomena*, vol. 60, no. 1-4, pp. 259-268, 1992.
 
-[3] Z. Wang, A. C. Bovik, H. R. Sheikh, and E. P. Simoncelli, "Image quality assessment: From error visibility to structural similarity," *IEEE Transactions on Image Processing*, vol. 13, no. 4, pp. 600â€?12, 2004.
+[3] Z. Wang, A. C. Bovik, H. R. Sheikh, and E. P. Simoncelli, "Image quality assessment: From error visibility to structural similarity," *IEEE Transactions on Image Processing*, vol. 13, no. 4, pp. 600-612, 2004.
 
 [4] scikit-image contributors, "scikit-image: Image processing in Python," documentation for `skimage.filters`, `skimage.restoration`, and `skimage.metrics`.
+
+[5] N. Wiener, *Extrapolation, Interpolation, and Smoothing of Stationary Time Series*. To be completed.

@@ -52,6 +52,7 @@ Run the main experiment scripts from the project root:
 .\.venv\Scripts\python.exe src\tv_denoising.py
 .\.venv\Scripts\python.exe src\consolidated_denoising_comparison.py
 .\.venv\Scripts\python.exe src\tikhonov_deblurring.py
+.\.venv\Scripts\python.exe src\wiener_deblurring.py
 ```
 
 Each script saves CSV files in `results/` and figures in `figures/`.
@@ -394,6 +395,47 @@ values improve reconstruction quality. The best PSNR occurs at
 deblurring improves both PSNR and SSIM compared with the blurred noisy
 observation. This experiment demonstrates why regularization is important for
 deblurring: direct or weakly regularized inversion can be unstable.
+
+## Wiener Deblurring Baseline
+
+Wiener deconvolution is a classical frequency-domain deblurring baseline. It
+stabilizes direct inverse filtering by avoiding division by very small blur
+frequencies, which would otherwise strongly amplify noise. The key parameter is
+`balance`. Smaller `balance` values produce more aggressive deblurring, but
+they also increase the risk of noise amplification and ringing artifacts.
+Larger `balance` values give a more conservative and stable restoration, but
+they may leave more blur in the result.
+
+This experiment uses the same synthetic degradation setting as the Tikhonov
+deblurring experiment: `skimage.data.camera()`, Gaussian blur with
+`blur_sigma = 2.0`, and Gaussian noise with `noise_sigma = 0.01`. It compares
+Wiener deconvolution with selected Tikhonov deblurring results.
+
+Output files:
+
+- `results/10_wiener_deblurring_results.csv`
+- `figures/10_wiener_deblurring_psnr.png`
+- `figures/10_wiener_deblurring_ssim.png`
+- `figures/10_wiener_deblurring_visual_grid.png`
+- `figures/10_wiener_deblurring_error_maps.png`
+
+| Method | Parameter | PSNR | SSIM | Runtime seconds |
+|---|---:|---:|---:|---:|
+| Blurred noisy | - | 25.417081 | 0.698806 | 0.000000 |
+| Tikhonov deblur | lambda = 0.01 | 27.752301 | 0.746024 | 0.033137 |
+| Tikhonov deblur | lambda = 0.05 | 27.242932 | 0.775857 | 0.027800 |
+| Wiener deblur | balance = 0.01 | 27.629829 | 0.735582 | 0.034590 |
+| Wiener deblur | balance = 0.03 | 26.743149 | 0.772423 | 0.030849 |
+
+Wiener deblurring improves substantially over the blurred noisy observation
+for moderate `balance` values. The best Wiener PSNR occurs at
+`balance = 0.01`, while the best Wiener SSIM occurs at `balance = 0.03`.
+Wiener comes close to the selected Tikhonov results, but in this experiment it
+does not exceed Tikhonov `lambda = 0.01` in PSNR or Tikhonov `lambda = 0.05`
+in SSIM. Very small `balance` values are unstable and produce poor metrics,
+while very large values are more conservative and leave stronger blur. This
+adds a classical frequency-domain baseline to the deblurring part of the
+project and reinforces that deblurring quality is parameter-sensitive.
 
 ## Next Steps
 
