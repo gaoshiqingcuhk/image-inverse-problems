@@ -51,6 +51,7 @@ Run the main experiment scripts from the project root:
 .\.venv\Scripts\python.exe src\tikhonov_lambda_extended.py
 .\.venv\Scripts\python.exe src\tv_denoising.py
 .\.venv\Scripts\python.exe src\nlm_denoising.py
+.\.venv\Scripts\python.exe src\multi_image_nlm_denoising_comparison.py
 .\.venv\Scripts\python.exe src\consolidated_denoising_comparison.py
 .\.venv\Scripts\python.exe src\tikhonov_deblurring.py
 .\.venv\Scripts\python.exe src\wiener_deblurring.py
@@ -303,6 +304,43 @@ runtime: NLM is slower than Gaussian filtering, although it is faster than TV
 in this local run. This adds a non-local, patch-similarity prior to the
 denoising part of the project, complementing local smoothing and variational
 regularization.
+
+## Multi-image Non-local Means Denoising Robustness
+
+Phase 5A tested Non-local Means only on the `camera` image. This Phase 5B
+experiment tests whether the NLM conclusion generalizes across multiple image
+types. It uses `camera`, `coins`, `moon`, and `page`, and compares the noisy
+image, Gaussian filtering, TV Chambolle, NLM `h = 0.08`, and NLM `h = 0.10`.
+The two NLM `h` values are fixed from Phase 5A rather than re-tuned for each
+image, so this is a fixed-parameter robustness test.
+
+Output files:
+
+- `results/13_multi_image_nlm_denoising_comparison.csv`
+- `figures/13_multi_image_nlm_denoising_psnr_by_method.png`
+- `figures/13_multi_image_nlm_denoising_ssim_by_method.png`
+- `figures/13_multi_image_nlm_denoising_runtime_by_method.png`
+- `figures/13_multi_image_nlm_denoising_visual_grid.png`
+- `figures/13_multi_image_nlm_denoising_best_method_summary.png`
+
+| Method | Average PSNR | Average SSIM | Average runtime seconds |
+|---|---:|---:|---:|
+| Noisy image | 20.257347 | 0.315270 | 0.000000 |
+| Gaussian filter | 26.224359 | 0.643396 | 0.002819 |
+| TV Chambolle | 28.667823 | 0.791593 | 0.166593 |
+| NLM h = 0.08 | 29.073556 | 0.765391 | 0.122570 |
+| NLM h = 0.10 | 29.284289 | 0.792058 | 0.161621 |
+
+In this robustness comparison, NLM `h = 0.10` has the best average PSNR and
+the best average SSIM, although its average SSIM is only marginally higher
+than TV Chambolle. NLM improves clearly over Gaussian filtering across all
+tested images. However, NLM does not universally outperform TV on every image:
+TV Chambolle is best on `moon` for both PSNR and SSIM, and it is also best by
+SSIM on `camera`. The ranking depends on both image type and evaluation
+metric. Overall, `h = 0.08` often gives stronger PSNR on individual images,
+while `h = 0.10` is better on average and stronger for SSIM. Gaussian filtering
+remains the fastest restoration method by a large margin. This strengthens the
+project by testing a non-local denoising prior beyond a single image.
 
 ## Consolidated Denoising Comparison
 

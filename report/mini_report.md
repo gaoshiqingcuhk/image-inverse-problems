@@ -201,6 +201,20 @@ PSNR among the tested methods, but TV Chambolle remains best by SSIM with SSIM
 `0.756463`. The sensitivity to `h` is also visible: `h = 0.04` is too
 conservative and leaves substantial residual noise.
 
+Phase 5B extends the NLM comparison to four images: `camera`, `coins`, `moon`,
+and `page`. The full results are saved in
+`results/13_multi_image_nlm_denoising_comparison.csv`, with visual summaries in
+`figures/13_multi_image_nlm_denoising_psnr_by_method.png`,
+`figures/13_multi_image_nlm_denoising_ssim_by_method.png`, and
+`figures/13_multi_image_nlm_denoising_visual_grid.png`. The average PSNR/SSIM
+values are `20.257347/0.315270` for the noisy image, `26.224359/0.643396` for
+Gaussian filtering, `28.667823/0.791593` for TV Chambolle,
+`29.073556/0.765391` for NLM `h = 0.08`, and `29.284289/0.792058` for NLM
+`h = 0.10`. In this fixed-parameter robustness test, NLM `h = 0.10` gives the
+best average PSNR and marginally best average SSIM. TV Chambolle remains highly
+competitive and is best on `moon` for both PSNR and SSIM, while Gaussian
+filtering remains the fastest restoration method.
+
 ### 5.4 Tikhonov Deblurring Results
 
 The deblurring experiment applies Gaussian blur and small Gaussian noise, then solves a Tikhonov deblurring problem over several values of `lambda`.
@@ -259,6 +273,17 @@ while TV remains stronger by SSIM. This reinforces that method ranking depends
 on the evaluation metric. NLM also has a higher computational cost than the
 Gaussian baseline.
 
+The multi-image NLM robustness experiment tests whether the Phase 5A conclusion
+transfers beyond the `camera` image. Because the NLM parameters are fixed at
+`h = 0.08` and `h = 0.10`, the experiment measures transferability rather than
+per-image tuning. In this comparison, NLM remains competitive across all four
+images and improves clearly over Gaussian filtering. However, it does not
+universally outperform TV on every image. TV remains highly competitive,
+especially on `moon`, and the best method depends on image type and evaluation
+metric. NLM `h = 0.08` often gives stronger PSNR on individual images, while
+`h = 0.10` is better on average and stronger for SSIM. The result strengthens
+the robustness dimension of the project while keeping the comparison metric-aware.
+
 A recurring theme is that optimal parameters depend on the chosen metric. In Gaussian filtering, Tikhonov denoising, and Tikhonov deblurring, the parameter that maximized PSNR was not always the parameter that maximized SSIM. This is important because PSNR and SSIM measure different aspects of image quality. A well-designed inverse problem experiment should therefore report multiple metrics and include visual comparisons rather than relying on a single number.
 
 The deblurring experiment also highlights the instability of inverse problems. When `lambda` is too small, the method attempts to invert the blur too aggressively and can amplify noise. When `lambda` is moderate, the method improves both PSNR and SSIM. This illustrates the practical role of regularization in stabilizing inverse problems.
@@ -283,6 +308,8 @@ Gaussian kernel rather than real camera or motion blur.
 The project also does not include learning-based or deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play or learned priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The Wiener experiment is still based on a synthetic Gaussian blur model and a limited set of images. The multi-image deblurring experiment still uses synthetic Gaussian blur and a small set of standard images, so broader datasets and real blur models are needed for stronger conclusions. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
 
 The NLM experiment is currently limited to a single standard image and a small set of hand-chosen h values.
+
+The multi-image NLM experiment uses only two fixed h values selected from the camera image, so it does not exhaustively tune NLM for each image.
 
 Future work should test more images, multiple noise and blur settings, alternative boundary conditions, TV deblurring, and simple learning-based baselines. These extensions would help determine whether the observed conclusions remain stable across broader image restoration tasks.
 
