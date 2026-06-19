@@ -1,8 +1,8 @@
-# Optimization-Based and Regularization-Based Methods for Image Inverse Problems: A Reproducible Study
+# A Reproducible Study of Image Denoising and Deblurring
 
 ## Abstract
 
-This report presents a reproducible computational mini-project on image inverse problems, focusing on image denoising and deblurring. The project studies how simple filtering and regularization-based methods recover a clean image from degraded observations. For denoising, Gaussian filtering, Tikhonov regularization, and Total Variation (TV) denoising are compared under controlled Gaussian noise. For deblurring, an FFT-based Tikhonov method is tested on images degraded by Gaussian blur and additive noise. The experiments are implemented in Python and evaluated using PSNR, SSIM, runtime, and visual comparisons. The denoising results show that Gaussian filtering is a strong and very fast baseline, while TV denoising achieves the best reconstruction quality in the tested setting. Tikhonov regularization provides an interpretable optimization-based formulation and illustrates the role of parameter sensitivity. The deblurring results show that Tikhonov regularization can improve blurred noisy observations, but weak regularization may amplify noise and artifacts. This work is intended as a reproducible research-training project rather than a novel algorithmic contribution.
+This report presents a reproducible computational study of image inverse problems, with experiments on denoising and deblurring. The project compares Gaussian filtering, Tikhonov regularization, Total Variation (TV) denoising, Non-local Means (NLM), Wiener deconvolution, Richardson-Lucy deconvolution, and a lightweight Tiny CNN denoising baseline. Controlled experiments use synthetic Gaussian noise and Gaussian blur, while multi-image and degradation-strength studies examine whether conclusions remain stable beyond one image or one degradation level. Performance is evaluated using PSNR, SSIM, runtime, visual comparisons, and error maps. The results show that TV is a strong structural denoising baseline, while NLM can provide strong PSNR and competitive SSIM when its filtering strength is appropriate. Denoising rankings vary with image content, metric, and noise strength. In the tested deblurring grid, Tikhonov is more stable than the selected Wiener and Richardson-Lucy settings; Richardson-Lucy is particularly sensitive to iteration count. The Tiny CNN improves substantially over the noisy observation but does not outperform the stronger classical baselines in this small CPU-friendly experiment. The project demonstrates a complete workflow for controlled image-restoration experiments and honest robustness analysis. It is intended as an undergraduate research-training study, not as a novel algorithmic or state-of-the-art contribution.
 
 ## 1. Introduction
 
@@ -110,9 +110,9 @@ Too few iterations may under-restore the image, while too many iterations may am
 
 Phase 8 introduces a lightweight learning-based denoising baseline. The Tiny CNN is trained on noisy and clean image patches and then applied to the `camera` test image. Its purpose is to provide a small, reproducible comparison with classical methods rather than to represent a state-of-the-art deep learning architecture. The experiment also separates one-time training cost from inference runtime.
 
-## 4. Experimental Setup
+## 4. Experimental Design
 
-All experiments use the built-in grayscale image `skimage.data.camera()`. Pixel values are converted to floating-point values in `[0, 1]`. Randomness is controlled by fixed seeds to make the results reproducible.
+The initial experiments use the built-in grayscale image `skimage.data.camera()`. Later robustness studies also use `coins`, `moon`, and `page` from `skimage.data`. Pixel values are converted to grayscale floating-point arrays in `[0, 1]`, and fixed seeds control randomness where noise or training samples are generated.
 
 For denoising experiments, Gaussian noise is added with
 
@@ -128,6 +128,8 @@ blur_sigma = 2.0
 noise_sigma = 0.01
 random seed = 42
 ```
+
+The main single-image comparisons use these fixed settings. Sensitivity and degradation-robustness experiments vary the relevant noise, blur, or regularization parameter explicitly. Multi-image robustness experiments retain fixed method parameters so that they test transferability rather than perform per-image tuning. The Tiny CNN is trained on patches from `coins`, `moon`, and `page` and evaluated on `camera`.
 
 Each experiment saves quantitative results to CSV files and visual results to figure files. The main quantitative metrics are PSNR, SSIM, and runtime. Visual comparisons and error maps are also used because image restoration quality cannot be fully understood from scalar metrics alone.
 
@@ -299,11 +301,11 @@ The experiments show several consistent patterns. First, Gaussian filtering is a
 
 Second, Tikhonov regularization is valuable because it introduces an explicit optimization-based formulation. It makes the trade-off between data fidelity and smoothness mathematically visible. In denoising, Tikhonov did not outperform TV or the best Gaussian filter result in terms of PSNR, but it provided a clear framework for studying regularization parameters. In deblurring, Tikhonov was especially useful because it stabilized an otherwise ill-conditioned inverse problem.
 
-Third, TV denoising achieved the best denoising quality in the tested setting. Its edge-preserving regularization produced the highest PSNR and SSIM among the compared denoising methods. This supports the intuition that an `L1`-type gradient penalty can better preserve edges than the squared-gradient penalty used in Tikhonov regularization. The cost is runtime: TV denoising is slower than both Gaussian filtering and FFT-based Tikhonov denoising.
+Third, TV denoising achieved the best PSNR and SSIM in the consolidated comparison of Gaussian filtering, Tikhonov, and TV. Its edge-preserving regularization supports the intuition that an `L1`-type gradient penalty can better preserve edges than the squared-gradient penalty used in Tikhonov regularization. Later NLM experiments show that this ranking is not universal: NLM can produce higher PSNR or marginally higher average SSIM in some settings. TV nevertheless remains a strong and stable structural baseline. Its cost is runtime relative to Gaussian filtering and FFT-based Tikhonov denoising.
 
-The multi-image robustness experiment supports the conclusion that TV gives
-the best denoising quality in the tested setting, while Gaussian filtering
-remains the fastest restoration method.
+The first multi-image robustness experiment, before NLM was added, found that
+TV gave the best denoising quality among the methods included at that phase,
+while Gaussian filtering remained the fastest restoration method.
 
 The NLM experiment adds a complementary denoising perspective. Gaussian
 filtering uses local smoothing, Tikhonov and TV use variational regularization,
@@ -344,7 +346,7 @@ The degradation robustness study shows that denoising rankings are sensitive to 
 
 The Tiny CNN experiment adds a learning-based perspective without changing the project into a deep learning benchmark. Although its training and validation losses decrease steadily and its reconstruction is much better than the noisy input, the small network does not exceed the tested classical methods in PSNR or SSIM. This is an informative negative result: limited training data and a compact architecture do not automatically provide an advantage over established image priors. The CNN offers a middle ground in inference cost, running faster than TV and NLM but slower than Gaussian filtering.
 
-## 7. Limitations
+## 7. Limitations and Future Work
 
 This project has several limitations. Although a small multi-image robustness
 check was added, only a few standard grayscale test images were used, so the
@@ -353,7 +355,7 @@ solvers use periodic boundary conditions, which are mathematically convenient
 but may not match real image boundaries. The blur model is synthetic and uses a
 Gaussian kernel rather than real camera or motion blur.
 
-The project does not include large-scale training or state-of-the-art deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The Wiener experiment is still based on a synthetic Gaussian blur model and a limited set of images. The multi-image deblurring experiment still uses synthetic Gaussian blur and a small set of standard images, so broader datasets and real blur models are needed for stronger conclusions. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
+The project does not include blind restoration, large-scale training, or state-of-the-art deep learning methods. No real-world image dataset was used. TV deblurring was not implemented, and no plug-and-play priors were tested. More images and real-world datasets are still needed to test whether the conclusions generalize. The Wiener experiment is still based on a synthetic Gaussian blur model and a limited set of images. The multi-image deblurring experiment still uses synthetic Gaussian blur and a small set of standard images, so broader datasets and real blur models are needed for stronger conclusions. The experiments therefore should be interpreted as a controlled computational study rather than a comprehensive benchmark.
 
 The NLM experiment is currently limited to a single standard image and a small set of hand-chosen h values.
 
@@ -369,11 +371,11 @@ Future work should test more images, multiple noise and blur settings, alternati
 
 ## 8. Conclusion
 
-This project builds a reproducible workflow for studying image inverse problems. It implements denoising and deblurring experiments, compares simple and regularization-based methods, and evaluates reconstruction quality using PSNR, SSIM, runtime, and visual inspection.
+This project demonstrates a complete reproducible workflow for studying image inverse problems, from simple filtering baselines to regularized, non-local, frequency-domain, iterative, robustness, and lightweight learning-based methods. The experiments show that different priors lead to different behavior: TV is a strong structural denoising baseline, NLM can be highly competitive when its parameter matches the degradation, and Tikhonov provides the most stable deblurring results in the tested synthetic Gaussian blur grid. PSNR and SSIM sometimes favor different methods, so quantitative metrics must be interpreted together with visual evidence and parameter sensitivity.
 
-For denoising, Gaussian filtering is fast and effective, but TV denoising gives the best reconstruction quality in the tested setting. Tikhonov regularization provides a clear optimization-based model and demonstrates the importance of regularization parameter selection. For deblurring, Tikhonov regularization improves blurred noisy observations but requires careful `lambda` selection to avoid unstable inversion.
+The Tiny CNN result reinforces an important practical lesson: adding a learned model does not automatically improve reconstruction quality. Training data, architecture, objective, and evaluation design all matter. In this small CPU-friendly experiment, the model improves over the noisy image but remains behind stronger classical baselines.
 
-Overall, the project demonstrates the value of regularization, parameter sensitivity analysis, and reproducible numerical experiments in image inverse problems. It provides a compact foundation for further study, including more test images, TV deblurring, plug-and-play methods, and learning-based restoration baselines.
+The main contribution is a structured computational comparison and an honest analysis of method behavior, not a new restoration algorithm. The repository provides an organized foundation for future work with broader datasets, real degradations, blind restoration, and stronger learning-based models.
 
 ## References
 
@@ -385,4 +387,4 @@ Overall, the project demonstrates the value of regularization, parameter sensiti
 
 [4] scikit-image contributors, "scikit-image: Image processing in Python," documentation for `skimage.filters`, `skimage.restoration`, and `skimage.metrics`.
 
-[5] N. Wiener, *Extrapolation, Interpolation, and Smoothing of Stationary Time Series*. To be completed.
+[5] N. Wiener, *Extrapolation, Interpolation, and Smoothing of Stationary Time Series, with Engineering Applications*. Cambridge, MA: MIT Press, 1949.
