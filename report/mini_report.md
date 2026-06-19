@@ -100,6 +100,12 @@ Wiener deconvolution is a frequency-domain regularized inverse filter for deblur
 
 In this project, Wiener deconvolution provides a classical baseline for deblurring. Smaller `balance` values apply more aggressive deblurring but may introduce noise amplification and ringing artifacts. Larger `balance` values are more conservative and stable, but they may leave more residual blur.
 
+### 3.7 Richardson-Lucy Deblurring
+
+Richardson-Lucy deblurring is a classic iterative deconvolution method. It starts from an initial image estimate and repeatedly updates that estimate using the mismatch between the observed blurred image and the currently reblurred estimate. The parameter `num_iter` controls the number of update steps.
+
+Too few iterations may under-restore the image, while too many iterations may amplify noise or artifacts. In this project, Richardson-Lucy provides an iterative deblurring baseline that complements Tikhonov regularization and Wiener deconvolution.
+
 ## 4. Experimental Setup
 
 All experiments use the built-in grayscale image `skimage.data.camera()`. Pixel values are converted to floating-point values in `[0, 1]`. Randomness is controlled by fixed seeds to make the results reproducible.
@@ -253,6 +259,12 @@ Phase 4 extends the deblurring comparison from the single `camera` image to four
 
 Using fixed parameters from the single-image deblurring study, Tikhonov `lambda = 0.05` gives the highest average PSNR (`27.40`) and average SSIM (`0.762`). Tikhonov `lambda = 0.01` gives average PSNR `27.25` and average SSIM `0.735`. Wiener `balance = 0.01` gives average PSNR `27.04` and average SSIM `0.726`, while Wiener `balance = 0.03` gives average PSNR `26.42` and average SSIM `0.760`. Thus, Wiener remains competitive on some image types and metrics, but Tikhonov is more stable on average in this fixed-parameter robustness study. The results also show that deblurring performance is image-dependent.
 
+### 5.7 Richardson-Lucy Deblurring Baseline
+
+Phase 6 adds a Richardson-Lucy deblurring baseline on the `camera` image. The full results are saved in `results/14_richardson_lucy_deblurring_results.csv`, with visual summaries in `figures/14_richardson_lucy_deblurring_psnr.png`, `figures/14_richardson_lucy_deblurring_ssim.png`, and `figures/14_richardson_lucy_deblurring_visual_grid.png`.
+
+The best Richardson-Lucy PSNR occurs at `num_iter = 5`, with PSNR `23.738545` and SSIM `0.738875`. The best Richardson-Lucy SSIM occurs at `num_iter = 10`, with PSNR `22.563644` and SSIM `0.745706`. Richardson-Lucy does not improve over the blurred noisy observation in PSNR, since the blurred noisy image has PSNR `25.419450`. However, it does improve over the blurred noisy SSIM value of `0.699460`. The tested Richardson-Lucy settings do not outperform the best Tikhonov or best Wiener baselines. Increasing the iteration count reduces both PSNR and SSIM after the best range, showing that iterative deconvolution can become sensitive to noise or artifacts.
+
 ## 6. Discussion
 
 The experiments show several consistent patterns. First, Gaussian filtering is a strong baseline for additive Gaussian noise. It is easy to implement, very fast, and gives a large improvement over the noisy image. However, because it is a generic smoothing method, it can blur edges and fine structures.
@@ -296,6 +308,10 @@ The multi-image deblurring experiment extends this comparison beyond a single te
 
 The Phase 4 results suggest that Tikhonov deblurring is more stable on average for the tested images, while Wiener deconvolution remains competitive for some image-metric combinations. The variation across `camera`, `coins`, `moon`, and `page` reinforces that deblurring performance depends on image structure as well as parameter choice.
 
+Richardson-Lucy complements the earlier deblurring methods by adding an iterative deconvolution mechanism. Tikhonov uses explicit regularization, Wiener uses a frequency-domain stabilized inverse, and Richardson-Lucy repeatedly updates the image estimate to better explain the blurred observation. The experiment shows that deblurring methods differ not only in numerical performance, but also in restoration mechanism and parameter sensitivity.
+
+In the tested setting, Richardson-Lucy improves the structural metric compared with the blurred noisy image, but it does not improve PSNR and does not exceed the selected Tikhonov or Wiener results. Its performance depends strongly on the iteration count: too many iterations reduce both PSNR and SSIM. This behavior is consistent with the general inverse-problem theme that stronger inversion can also amplify noise or artifacts. Richardson-Lucy is therefore a useful iterative baseline, but in this synthetic Gaussian blur plus noise setting it is less stable than the selected Tikhonov and Wiener methods.
+
 ## 7. Limitations
 
 This project has several limitations. Although a small multi-image robustness
@@ -310,6 +326,8 @@ The project also does not include learning-based or deep learning methods. No re
 The NLM experiment is currently limited to a single standard image and a small set of hand-chosen h values.
 
 The multi-image NLM experiment uses only two fixed h values selected from the camera image, so it does not exhaustively tune NLM for each image.
+
+The Richardson-Lucy experiment is currently limited to a single synthetic Gaussian blur setting and a small set of hand-chosen iteration counts.
 
 Future work should test more images, multiple noise and blur settings, alternative boundary conditions, TV deblurring, and simple learning-based baselines. These extensions would help determine whether the observed conclusions remain stable across broader image restoration tasks.
 

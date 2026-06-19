@@ -56,6 +56,7 @@ Run the main experiment scripts from the project root:
 .\.venv\Scripts\python.exe src\tikhonov_deblurring.py
 .\.venv\Scripts\python.exe src\wiener_deblurring.py
 .\.venv\Scripts\python.exe src\multi_image_deblurring_comparison.py
+.\.venv\Scripts\python.exe src\richardson_lucy_deblurring.py
 ```
 
 Each script saves CSV files in `results/` and figures in `figures/`.
@@ -566,6 +567,52 @@ image-dependent, with `moon` behaving differently from more textured or
 document-like images. This extends the deblurring part of the project from a
 single-image comparison to a small robustness study across several standard
 test images.
+
+## Richardson-Lucy Deblurring Baseline
+
+Richardson-Lucy deblurring is a classic iterative deconvolution method. It
+starts from an image estimate and repeatedly updates it so that its blurred
+version better matches the observed blurred image. The key parameter is
+`num_iter`, the number of update steps. Fewer iterations may under-restore the
+image, while too many iterations can sharpen noise or create artifacts.
+
+This experiment compares Richardson-Lucy against fixed Tikhonov and Wiener
+deblurring baselines on the `camera` image using the same synthetic
+degradation: Gaussian blur with `blur_sigma = 2.0` and Gaussian noise with
+`noise_sigma = 0.01`.
+
+Output files:
+
+- `results/14_richardson_lucy_deblurring_results.csv`
+- `figures/14_richardson_lucy_deblurring_psnr.png`
+- `figures/14_richardson_lucy_deblurring_ssim.png`
+- `figures/14_richardson_lucy_deblurring_runtime.png`
+- `figures/14_richardson_lucy_deblurring_visual_grid.png`
+- `figures/14_richardson_lucy_deblurring_error_maps.png`
+
+| Method | Parameter | PSNR | SSIM | Runtime seconds |
+|---|---:|---:|---:|---:|
+| Blurred noisy | - | 25.419450 | 0.699460 | 0.000000 |
+| Tikhonov deblur | lambda = 0.01 | 27.757792 | 0.746953 | 0.020218 |
+| Tikhonov deblur | lambda = 0.05 | 27.244471 | 0.776191 | 0.018798 |
+| Wiener deblur | balance = 0.01 | 27.636507 | 0.736645 | 0.018826 |
+| Wiener deblur | balance = 0.03 | 26.745217 | 0.772891 | 0.018530 |
+| Richardson-Lucy | num_iter = 5 | 23.738545 | 0.738875 | - |
+| Richardson-Lucy | num_iter = 10 | 22.563644 | 0.745706 | - |
+| Richardson-Lucy | num_iter = 20 | 21.544518 | 0.741083 | - |
+| Richardson-Lucy | num_iter = 30 | 20.930593 | 0.731952 | - |
+| Richardson-Lucy | num_iter = 50 | 20.040791 | 0.712166 | - |
+
+Richardson-Lucy does not improve over the blurred noisy observation in PSNR,
+but it does improve over the blurred noisy observation in SSIM for the tested
+iteration counts. In this run, the best Richardson-Lucy PSNR occurs at
+`num_iter = 5`, while the best Richardson-Lucy SSIM occurs at `num_iter = 10`.
+The tested Richardson-Lucy settings do not outperform the best Tikhonov or
+best Wiener baselines in this synthetic Gaussian blur plus noise experiment.
+Too many iterations reduce both PSNR and SSIM, and runtime increases with
+iteration count. This makes Richardson-Lucy a useful iterative deconvolution
+baseline, but in this setting it is less stable than the selected Tikhonov and
+Wiener methods and is sensitive to the number of iterations.
 
 ## Next Steps
 
