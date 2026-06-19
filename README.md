@@ -593,15 +593,15 @@ Output files:
 | Method | Parameter | PSNR | SSIM | Runtime seconds |
 |---|---:|---:|---:|---:|
 | Blurred noisy | - | 25.419450 | 0.699460 | 0.000000 |
-| Tikhonov deblur | lambda = 0.01 | 27.757792 | 0.746953 | 0.020218 |
-| Tikhonov deblur | lambda = 0.05 | 27.244471 | 0.776191 | 0.018798 |
-| Wiener deblur | balance = 0.01 | 27.636507 | 0.736645 | 0.018826 |
-| Wiener deblur | balance = 0.03 | 26.745217 | 0.772891 | 0.018530 |
-| Richardson-Lucy | num_iter = 5 | 23.738545 | 0.738875 | - |
-| Richardson-Lucy | num_iter = 10 | 22.563644 | 0.745706 | - |
-| Richardson-Lucy | num_iter = 20 | 21.544518 | 0.741083 | - |
-| Richardson-Lucy | num_iter = 30 | 20.930593 | 0.731952 | - |
-| Richardson-Lucy | num_iter = 50 | 20.040791 | 0.712166 | - |
+| Tikhonov deblur | lambda = 0.01 | 27.757792 | 0.746953 | 0.019798 |
+| Tikhonov deblur | lambda = 0.05 | 27.244471 | 0.776191 | 0.019327 |
+| Wiener deblur | balance = 0.01 | 27.636507 | 0.736645 | 0.019391 |
+| Wiener deblur | balance = 0.03 | 26.745217 | 0.772891 | 0.019019 |
+| Richardson-Lucy | num_iter = 5 | 23.738545 | 0.738875 | 0.093209 |
+| Richardson-Lucy | num_iter = 10 | 22.563644 | 0.745706 | 0.177121 |
+| Richardson-Lucy | num_iter = 20 | 21.544518 | 0.741083 | 0.353720 |
+| Richardson-Lucy | num_iter = 30 | 20.930593 | 0.731952 | 0.533768 |
+| Richardson-Lucy | num_iter = 50 | 20.040791 | 0.712166 | 0.914123 |
 
 Richardson-Lucy does not improve over the blurred noisy observation in PSNR,
 but it does improve over the blurred noisy observation in SSIM for the tested
